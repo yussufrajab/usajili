@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  allowedDevOrigins: ["102.207.206.40", "maisara.work.gd"],
 };
 
 export default nextConfig;

@@ -1,75 +1,40 @@
 "use client";
 
 import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { registrationSchema, type RegistrationData } from "@/lib/validations";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Toaster, toast } from "sonner";
-import {
-  Loader2,
-  User,
-  AtSign,
-  Mail,
-  Phone,
-  Lock,
-  Building2,
-} from "lucide-react";
+import { Loader2, User, Lock } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
-const fields: {
-  name: keyof RegistrationData;
-  label: string;
-  type: string;
-  placeholder: string;
-  icon: React.ElementType;
-  hint?: string;
-}[] = [
-  { name: "fullName", label: "Jina Kamili", type: "text", placeholder: "Fatma Ali Kombo", icon: User },
-  { name: "username", label: "Jina la Mtumiaji", type: "text", placeholder: "fatmakombo", icon: AtSign },
-  { name: "email", label: "Barua Pepe", type: "email", placeholder: "fatma.kombo@zanzibar.go.tz", icon: Mail, hint: "Lazima iishe na .go.tz" },
-  { name: "phone", label: "Nambari ya Simu", type: "tel", placeholder: "0777123456", icon: Phone, hint: "Tarakimu 10 zikianza na 0" },
-  { name: "password", label: "Nenosiri", type: "text", placeholder: "mfano : Unguja@2016", icon: Lock, hint: "Herufi 8+, namba na alama maalum" },
-  { name: "institution", label: "Taasisi", type: "text", placeholder: "WIZARA YA AFYA", icon: Building2 },
-];
-
-export default function RegistrationPage() {
+export default function LoginPage() {
   const [submitting, setSubmitting] = useState(false);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const router = useRouter();
 
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm<RegistrationData>({
-    resolver: zodResolver(registrationSchema),
-  });
-
-  const onSubmit = async (data: RegistrationData) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setSubmitting(true);
     try {
-      const res = await fetch("/api/register", {
+      const res = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ username, password }),
       });
 
       const result = await res.json();
 
       if (!res.ok) {
-        if (res.status === 409) {
-          toast.error(result.error);
-        } else {
-          toast.error(result.error || "Usajili umeshindikana");
-        }
+        toast.error(result.error || "Login umeshindikana");
         return;
       }
 
-      toast.success("Usajili umefanikiwa!");
-      reset();
+      toast.success("Login umefanikiwa!");
+      router.push("/dashboard");
     } catch {
       toast.error("Kuna tatizo. Tafadhali jaribu tena.");
     } finally {
@@ -88,7 +53,7 @@ export default function RegistrationPage() {
 
       <Toaster richColors position="top-center" />
 
-      <div className="w-full max-w-xl relative z-10">
+      <div className="w-full max-w-md relative z-10">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-24 h-24 rounded-2xl bg-white shadow-xl mb-5 ring-4 ring-emerald-200 p-2">
@@ -102,45 +67,51 @@ export default function RegistrationPage() {
             />
           </div>
           <h1 className="text-4xl font-extrabold text-emerald-900 tracking-tight leading-tight">
-            USAJILI WA
+            INGIA KAMA
             <br />
             <span className="bg-gradient-to-r from-emerald-700 via-blue-700 to-amber-600 bg-clip-text text-transparent">
-              WATUMIAJI WA MFUMO
+              MSIMAMIZI
             </span>
           </h1>
           <p className="text-emerald-700/60 mt-2 text-base">
-            Jaza maelezo yako hapa chini kujiandikisha
+            Weka stahi zako kupata ufikiaji
           </p>
         </div>
 
-        {/* Form card */}
+        {/* Login card */}
         <div className="bg-white/80 backdrop-blur-xl rounded-3xl border border-emerald-200/60 shadow-xl shadow-emerald-100 p-8">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-            {fields.map(({ name, label, type, placeholder, icon: Icon, hint }) => (
-              <div key={name} className="space-y-1.5">
-                <Label htmlFor={name} className="text-emerald-900 text-base font-medium flex items-center gap-2">
-                  <Icon className="h-4 w-4 text-amber-600" />
-                  {label}
-                </Label>
-                <Input
-                  id={name}
-                  type={type}
-                  placeholder={placeholder}
-                  {...register(name)}
-                  aria-invalid={!!errors[name]}
-                  className="h-12 rounded-xl bg-white border-emerald-200 text-emerald-950 text-base placeholder:text-emerald-500/50 placeholder:text-lg focus:border-emerald-500 focus:ring-emerald-500/20 transition-all duration-200"
-                />
-                {hint && !errors[name] && (
-                  <p className="text-sm text-emerald-800">{hint}</p>
-                )}
-                {errors[name] && (
-                  <p className="text-base text-red-600 mt-1 flex items-center gap-1">
-                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-red-500" />
-                    {errors[name].message}
-                  </p>
-                )}
-              </div>
-            ))}
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="space-y-1.5">
+              <Label htmlFor="username" className="text-emerald-900 text-base font-medium flex items-center gap-2">
+                <User className="h-4 w-4 text-amber-600" />
+                Jina la Mtumiaji
+              </Label>
+              <Input
+                id="username"
+                type="text"
+                placeholder="admin"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+                className="h-12 rounded-xl bg-white border-emerald-200 text-emerald-950 text-base placeholder:text-emerald-500/50 placeholder:text-lg focus:border-emerald-500 focus:ring-emerald-500/20 transition-all duration-200"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="password" className="text-emerald-900 text-base font-medium flex items-center gap-2">
+                <Lock className="h-4 w-4 text-amber-600" />
+                Nenosiri
+              </Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="h-12 rounded-xl bg-white border-emerald-200 text-emerald-950 text-base placeholder:text-emerald-500/50 placeholder:text-lg focus:border-emerald-500 focus:ring-emerald-500/20 transition-all duration-200"
+              />
+            </div>
 
             <Button
               type="submit"
@@ -153,7 +124,7 @@ export default function RegistrationPage() {
                   Inawasilisha...
                 </>
               ) : (
-                "JIANDIKISHE"
+                "INGIA"
               )}
             </Button>
           </form>
@@ -170,10 +141,10 @@ export default function RegistrationPage() {
           </div>
           <div className="text-center">
             <Link
-              href="/login"
+              href="/"
               className="text-emerald-600/50 hover:text-emerald-700 text-sm transition-colors duration-200"
             >
-              Msimamizi
+              &larr; Rudi kwenye Usajili
             </Link>
           </div>
         </div>
