@@ -302,28 +302,32 @@ stop_frontend() {
 start_frontend() {
     log_info "Starting frontend server on port $FRONTEND_PORT..."
 
-    # Clean up any existing processes
+    # Kill any existing processes on port 3000
+    log_warning "Freeing port $FRONTEND_PORT..."
+    kill_port $FRONTEND_PORT "Frontend"
+
+    # Kill any remaining Next.js processes
     log_warning "Cleaning up any existing Next.js processes..."
     pkill -9 -f "next-server" 2>/dev/null
     pkill -9 -f "node.*next" 2>/dev/null
     pkill -9 -f "node.*3000" 2>/dev/null
     sleep 2
 
-    kill_port $FRONTEND_PORT "Frontend"
-
-    if [ $? -ne 0 ]; then
-        log_error "Could not free frontend port"
+    # Verify port is free
+    if lsof -Pi :$FRONTEND_PORT -sTCP:LISTEN -t >/dev/null 2>&1 ; then
+        log_error "Port $FRONTEND_PORT is still in use after cleanup. Aborting."
         return 1
     fi
+    log_success "Port $FRONTEND_PORT is free"
 
     # Create log directory
     mkdir -p "$LOG_DIR"
 
-    # Start Next.js
+    # Start Next.js in production mode
     cd "$APP_DIR"
-    nohup npm run dev > "$FRONTEND_LOG" 2>&1 &
+    nohup npx next start -p $FRONTEND_PORT > "$FRONTEND_LOG" 2>&1 &
 
-    wait_for_port $FRONTEND_PORT "Frontend" 45
+    wait_for_port $FRONTEND_PORT "Frontend" 30
     return $?
 }
 
